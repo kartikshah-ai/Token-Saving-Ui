@@ -1,0 +1,127 @@
+<div class="main-layout">
+  <!-- LEFT COLUMN: Analytics Dashboard -->
+  <div class="dashboard-side">
+    <div class="header">
+      <h1 class="title">Enterprise AI Cache</h1>
+      <p class="subtitle">Real-time savings & analytics for Tenant: <strong>tenant_company_a</strong></p>
+    </div>
+
+    @if (loading()) {
+      <div class="loader">
+        <div class="spinner"></div>
+      </div>
+    } @else if (error()) {
+      <div class="metric-card" style="text-align: center; border-color: #f87171;">
+        <h2 style="color: #f87171;">Connection Failed</h2>
+        <p>{{ error() }}</p>
+        <button (click)="fetchAnalytics()" style="padding: 10px 20px; background: #f87171; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px;">Retry Connection</button>
+      </div>
+    } @else if (data()) {
+      <div class="metrics-grid">
+        <div class="metric-card" style="animation-delay: 0.1s;">
+          <div class="metric-title">Total Requests</div>
+          <div class="metric-value">{{ data()?.totalRequests }}</div>
+        </div>
+        
+        <div class="metric-card" style="animation-delay: 0.2s;">
+          <div class="metric-title">Cache Hit Ratio</div>
+          <div class="metric-value info">{{ data()?.hitRatioPercentage }}%</div>
+        </div>
+        
+        <div class="metric-card" style="animation-delay: 0.3s;">
+          <div class="metric-title">Tokens Saved</div>
+          <div class="metric-value success">{{ data()?.totalTokensSaved | number }}</div>
+        </div>
+
+        <div class="metric-card" style="animation-delay: 0.4s;">
+          <div class="metric-title">Estimated Savings</div>
+          <div class="metric-value warning">${{ data()?.totalMoneySaved | number:'1.2-2' }}</div>
+        </div>
+      </div>
+
+      <div class="table-container" style="animation-delay: 0.5s;">
+        <div class="table-header">
+          <h3>Recent Activity</h3>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Status</th>
+              <th>Tokens Saved</th>
+              <th>Cost Saved</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of data()?.recentActivity; track log.id) {
+              <tr>
+                <td>{{ log.timestamp | date:'shortTime' }}</td>
+                <td>
+                  <span class="badge" [ngClass]="log.wasCached ? 'hit' : 'miss'">
+                    {{ log.wasCached ? 'CACHE HIT' : 'LLM FETCH' }}
+                  </span>
+                </td>
+                <td [style.color]="log.wasCached ? '#34d399' : '#94a3b8'">{{ log.wasCached ? '+' + log.tokensSaved : '0' }}</td>
+                <td [style.color]="log.wasCached ? '#fbbf24' : '#94a3b8'">{{ log.wasCached ? '+$' + (log.estimatedCostSaved | number:'1.4-4') : '$0.00' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" style="text-align: center; padding: 2rem; color: #64748b;">No analytics data recorded yet.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <!-- RIGHT COLUMN: Claude-Style Chat UI -->
+  <div class="chat-side">
+    <div class="chat-container">
+      <div class="chat-history">
+        @for (msg of chatHistory(); track $index) {
+          <div class="chat-message" [ngClass]="msg.role">
+            <div class="message-bubble">
+              <div class="message-header">
+                <span class="sender-name">{{ msg.role === 'user' ? 'You' : 'Semantic Cache AI' }}</span>
+                @if (msg.role === 'assistant' && msg.isCached) {
+                  <span class="cache-badge">⚡ CACHED</span>
+                }
+              </div>
+              <div class="message-content" [innerHTML]="msg.content | markdown"></div>
+            </div>
+          </div>
+        }
+        
+        @if (isAsking()) {
+          <div class="chat-message assistant">
+            <div class="message-bubble loading-bubble">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="chat-input-area">
+        <div class="input-wrapper">
+          <input 
+            type="text" 
+            #promptInput
+            placeholder="Ask a question..." 
+            (keydown.enter)="askQuestion(promptInput.value, promptInput)"
+            [disabled]="isAsking()"
+          >
+          <button 
+            class="send-btn" 
+            (click)="askQuestion(promptInput.value, promptInput)"
+            [disabled]="isAsking() || !promptInput.value.trim()">
+            <svg xmlns="http://www.w3.org/Form/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          </button>
+        </div>
+        <div class="input-footer">Claude AI-style caching interface powered by Qdrant and Google Gemini.</div>
+      </div>
+    </div>
+  </div>
+</div>
