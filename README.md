@@ -113,10 +113,10 @@ If LLM was called, store the question + answer in Qdrant for future use. Return 
 
 ## 👨‍💻 Author
 
-**Your Name**
+**Kartik Shah**
 - 4+ Years Software Developer (Angular + .NET + SQL Server)
-- LinkedIn: [your-linkedin]
-- GitHub: [your-github]
+- LinkedIn: [https://www.linkedin.com/in/kartik-shah-06190b19a/]
+- GitHub: [https://github.com/kartikshah-ai]
 
 ---
 
